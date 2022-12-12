@@ -58,6 +58,19 @@ export class Observable<T extends ObservableDataType> {
     static create<T extends ObservableDataType>(initData: T) {
         return new Observable<T>(initData);
     }
+
+    wait(util: (state: T) => boolean) {
+        return new Promise<T>((resolve) => {
+            const onNotify: Observer<T> = (state) => {
+                if (util(state)) {
+                    resolve(state);
+                    this.removeObserver(onNotify);
+                }
+            };
+            if (util(this.getState())) resolve(this.getState());
+            else this.addObserver(onNotify);
+        });
+    }
 }
 
 export const useObservable = <T extends ObservableDataType>(ob: Observable<T>) => {

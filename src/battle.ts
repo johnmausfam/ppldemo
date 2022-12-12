@@ -1,6 +1,7 @@
 import { Hooks } from './data/hooks';
 import { I_BattleAction, I_BattleLog } from './def/battle';
 import { I_Character } from './def/mianContext';
+import { AsyncTaskState } from './lib/asyncTaskState';
 import { Observable } from './lib/observable';
 import { actOperation, AsyncPipeLine, waitOperation } from './lib/pipeline';
 import { depthCopy, getRandom, waitFor } from './lib/util';
@@ -21,9 +22,10 @@ export class Battle {
         this.monster = Observable.create(Hooks['App.Battle.initMonster'](main.getHookMap)(this.createMonster()));
     }
 
-    createMonster() {
+    createMonster(): I_Character {
         const hp = getRandom(80, 150);
         return {
+            type: 'monster',
             name: '深淵巨獸',
             hp,
             maxhp: hp,
@@ -58,28 +60,32 @@ export class Battle {
         if (Hooks['App.Battle.validateAction'](getHookMap)(actionData, this).invalid === true) return;
 
         this.userWaiting.update(false);
-        await AsyncPipeLine.create(waitOperation<I_BattleAction, [Battle]>(250))
+
+        const player_task = new AsyncTaskState();
+        await AsyncPipeLine.create(waitOperation<I_BattleAction, [Battle, AsyncTaskState]>(250))
             .add(actOperation(() => this.log(`${this.player.getState().name}對${this.monster.getState().name}發動攻擊`)))
             .add(waitOperation(250))
             .add(Hooks['App.Battle.beforeAction'](getHookMap))
-            .add((action) => this.damage(action))
+            .add((action) => this.damage(action, player_task))
             .add(Hooks['App.Battle.afterAction'](getHookMap))
-            .run(actionData, this);
+            .run(actionData, this, player_task);
 
+        await player_task.wait();
         if (await this.judge()) {
             this.end();
             return;
         }
 
-        await AsyncPipeLine.create(waitOperation<I_BattleAction, [Battle]>(250))
+        const monster_task = new AsyncTaskState();
+        await AsyncPipeLine.create(waitOperation<I_BattleAction, [Battle, AsyncTaskState]>(250))
             .add(actOperation(() => this.log(`${this.monster.getState().name}對${this.player.getState().name}發動攻擊`)))
             .add(waitOperation(250))
             .add(Hooks['App.Battle.beforeAction'](getHookMap))
-            .add((action) => this.damage(action))
+            .add((action) => this.damage(action, monster_task))
             .add(Hooks['App.Battle.afterAction'](getHookMap))
-            .run(this.createBattleAction('monster', 'player', 'attack', null), this);
+            .run(this.createBattleAction('monster', 'player', 'attack', null), this, monster_task);
 
-        await waitFor(500);
+        await Promise.all([monster_task.wait(), waitFor(500)]);
         if (await this.judge()) {
             this.end();
         } else {
@@ -87,9 +93,9 @@ export class Battle {
         }
     };
 
-    async damage(action: I_BattleAction): Promise<I_BattleAction> {
+    async damage(action: I_BattleAction, asynTaskState: AsyncTaskState): Promise<I_BattleAction> {
         const countDamageHook = Hooks['App.Battle.damage'](this.main.getHookMap);
-        let battleResult = await countDamageHook({ damage: undefined }, action, this);
+        let battleResult = await countDamageHook({ damage: undefined }, action, this, asynTaskState);
         if (battleResult.damage === undefined) {
             //default behavior
             battleResult.damage = Math.round(

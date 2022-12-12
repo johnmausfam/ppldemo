@@ -1,6 +1,5 @@
 import { Battle } from '../battle';
 import { I_Character, I_MainContext } from '../def/mianContext';
-import { depthCopy } from '../lib/util';
 import { Main } from '../main';
 
 export const MainContext = {
@@ -10,7 +9,7 @@ export const MainContext = {
             screenData: {
                 Loading: { message: '' },
             },
-            player: { name: '', hp: 0, maxhp: 0, atk: 0, def: 0, pluginData: {} },
+            player: { type: 'player', name: '', hp: 0, maxhp: 0, atk: 0, def: 0, pluginData: {} },
             pluginData: {},
             battle: undefined,
         };

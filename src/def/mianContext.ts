@@ -12,6 +12,7 @@ export interface I_MainContext {
 }
 
 export interface I_Character {
+    type: 'player' | 'monster';
     name: string;
     hp: number;
     maxhp: number;
