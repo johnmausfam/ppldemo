@@ -108,10 +108,10 @@ export const Maigc = createPlugin((process) => {
                     const targetPluginData = action.target.pluginData[PluginDataKey] as I_PluginData_Magic;
                     const magicData = MagicList[action.args];
                     result.damage = Math.round(
-                        (sourcePluginData.matk * getCategoryFactor(magicData.category, targetPluginData.category) + 15) *
+                        (sourcePluginData.matk * getCategoryFactor(magicData.category, targetPluginData.category) + 20) *
                             getCategoryFactor(sourcePluginData.category, targetPluginData.category) *
                             magicData.factor *
-                            getRandom(0.9, 1.1)
+                            getRandom(0.85, 1.25)
                     );
                 }
                 return result;

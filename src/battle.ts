@@ -16,6 +16,11 @@ export class Battle {
     public logs = Observable.create<I_BattleLog[]>([]);
     public isEnd = Observable.create<boolean>(false);
 
+    protected animeState = {
+        monster: Observable.create<number>(0),
+        player: Observable.create<number>(0),
+    };
+
     constructor(main: Main, player: I_Character) {
         this.main = main;
         this.player = Observable.create(Hooks['App.Battle.initPlayer'](main.getHookMap)(depthCopy(player)));
@@ -23,14 +28,14 @@ export class Battle {
     }
 
     createMonster(): I_Character {
-        const hp = getRandom(80, 150);
+        const hp = getRandom(100, 250);
         return {
             type: 'monster',
             name: '深淵巨獸',
             hp,
             maxhp: hp,
-            atk: getRandom(6, 14),
-            def: getRandom(4, 9),
+            atk: getRandom(8, 20),
+            def: getRandom(5, 10),
             pluginData: {},
         };
     }
@@ -99,21 +104,23 @@ export class Battle {
         if (battleResult.damage === undefined) {
             //default behavior
             battleResult.damage = Math.round(
-                action.source.atk *
-                    Math.max(
-                        0.3,
-                        1 +
-                            (action.source.atk > action.target.def
-                                ? Math.min(3, action.source.atk / action.target.def)
-                                : (-1 * action.source.def) / action.target.atk)
-                    ) *
-                    getRandom(0.9, 1.1)
+                (Math.max(3, action.source.atk - action.target.def) +
+                    action.source.atk *
+                        Math.max(
+                            0.2,
+                            0.5 +
+                                (action.source.atk > action.target.def
+                                    ? Math.min(2, action.source.atk / action.target.def)
+                                    : (-1 * action.source.def) / action.target.atk)
+                        )) *
+                    getRandom(0.75, 1.25)
             );
             this.log(`${action.target.name}受到了${battleResult.damage}點物理攻擊傷害`);
         } else {
             this.log(`${action.target.name}受到了${battleResult.damage}點傷害`);
         }
         this[action.targetKey].update((target) => ({ ...target, hp: Math.max(0, target.hp - (battleResult.damage ?? 0)) }));
+        this.playAnime(action.targetKey);
         await waitFor(500);
         return { ...action, result: battleResult };
     }
@@ -153,5 +160,13 @@ export class Battle {
             source: depthCopy(this[sourceKey].getState()),
             target: depthCopy(this[targetKey].getState()),
         };
+    }
+
+    playAnime(key: keyof typeof this.animeState) {
+        this.animeState[key].update((v) => v + 1);
+    }
+
+    getAnimeObservableState(key: keyof typeof this.animeState) {
+        return this.animeState[key];
     }
 }

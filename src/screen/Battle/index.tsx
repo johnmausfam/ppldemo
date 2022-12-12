@@ -3,40 +3,55 @@ import * as React from 'react';
 import { createUseStyles } from 'react-jss';
 import { Battle as BattleCtrl } from '../../battle';
 import { Hooks } from '../../data/hooks';
-import {
-    BattleActionKey,
-    BattleActionMenuRenderData,
-    BattleMenuAction,
-    I_BattleAction,
-    I_Props_BattleActionMenuRenderer,
-} from '../../def/battle';
+import { BattleActionKey, BattleMenuAction, I_Props_BattleActionMenuRenderer } from '../../def/battle';
+import { getShakeAnimeProps } from '../../lib/anime/script';
 import { useObservable } from '../../lib/observable';
 import { PipeLine } from '../../lib/pipeline';
 import { useAppContext, useMainContext } from '../../lib/reactHook';
 import { depthCopy } from '../../lib/util';
 import { CharacterInfo } from '../../screenComp/CharacterInfo';
 import { ScreenContainer } from '../Layout';
+import Anime from '../../lib/anime';
+import { AnimeInstance } from 'animejs';
 
 export const Battle: React.FC = () => {
-    const classes = useStyles();
-    const [action, setAction] = React.useState<BattleMenuAction>({ action: BattleActionKey.Attack });
     const { battle } = useMainContext();
     if (battle) {
         return (
             <ScreenContainer>
-                <div className={classes.bg}></div>
-                <BattleCharacterInfo battle={battle} targetKey="player" />
-                <BattleCharacterInfo battle={battle} targetKey="monster" />
-                <Monster battle={battle} onClick={() => battle.act(action.action, action.args)} />
-                <BattleLogger battle={battle} />
-                <BattleActionMenu
-                    battle={battle}
-                    action={action}
-                    onChange={(action) => (action.action == BattleActionKey.Escape ? battle.escape() : setAction(action))}
-                />
+                <BattleContent battle={battle} />
             </ScreenContainer>
         );
     }
+    return null;
+};
+
+const BattleContent: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
+    const classes = useStyles();
+    const [action, setAction] = React.useState<BattleMenuAction>({ action: BattleActionKey.Attack });
+    const animeRef = React.useRef<AnimeInstance>();
+    React.useEffect(() => {
+        const ob = () => {
+            animeRef.current?.restart();
+        };
+        battle.getAnimeObservableState('player').addObserver(ob);
+        return () => void battle.getAnimeObservableState('player').removeObserver(ob);
+    }, []);
+    return (
+        <Anime in appear animeRef={animeRef} {...getShakeAnimeProps()}>
+            <div className={classes.bg}></div>
+            <BattleCharacterInfo battle={battle} targetKey="player" />
+            <BattleCharacterInfo battle={battle} targetKey="monster" />
+            <Monster battle={battle} onClick={() => battle.act(action.action, action.args)} />
+            <BattleLogger battle={battle} />
+            <BattleActionMenu
+                battle={battle}
+                action={action}
+                onChange={(action) => (action.action == BattleActionKey.Escape ? battle.escape() : setAction(action))}
+            />
+        </Anime>
+    );
+
     return null;
 };
 
@@ -49,7 +64,19 @@ const BattleCharacterInfo: React.FC<{ battle: BattleCtrl; targetKey: 'player' | 
 const Monster: React.FC<{ battle: BattleCtrl; onClick?: () => void }> = ({ battle, onClick }) => {
     const classes = useStyles();
     const enable = useObservable(battle.userWaiting);
-    return <div className={classNames(classes.monster, { enable })} onClick={() => enable && onClick?.()}></div>;
+    const animeRef = React.useRef<AnimeInstance>();
+    React.useEffect(() => {
+        const ob = () => {
+            animeRef.current?.restart();
+        };
+        battle.getAnimeObservableState('monster').addObserver(ob);
+        return () => void battle.getAnimeObservableState('monster').removeObserver(ob);
+    }, []);
+    return (
+        <Anime in appear animeRef={animeRef} {...getShakeAnimeProps()}>
+            <div className={classNames(classes.monster, { enable })} onClick={() => enable && onClick?.()}></div>
+        </Anime>
+    );
 };
 
 const BattleLogger: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
