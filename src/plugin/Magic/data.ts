@@ -1,4 +1,7 @@
+import React from 'react';
 import { getRandom } from '../../lib/util';
+import { I_Props_MagicFX } from './fx';
+import { ExplosionFx } from './fx/explosion';
 
 export enum MagicCategory {
     Earth = 0,
@@ -6,11 +9,18 @@ export enum MagicCategory {
     Fire = 2,
     Wind = 3,
 }
+export const MagicCategoryColorMap: Record<MagicCategory, string> = {
+    [MagicCategory.Earth]: '#1ea300',
+    [MagicCategory.Ice]: '#4287f5',
+    [MagicCategory.Fire]: '#cc2b2b',
+    [MagicCategory.Wind]: '#c9bf00',
+};
 export interface I_Magic {
     name: string;
     factor: number;
     mp: number;
     category: MagicCategory;
+    fx?: React.ComponentType<I_Props_MagicFX>;
 }
 
 export const MagicList: I_Magic[] = [
@@ -22,7 +32,7 @@ export const MagicList: I_Magic[] = [
     { name: '冰錐', factor: 4, mp: 45, category: MagicCategory.Ice },
     { name: '雙重風刃', factor: 4, mp: 45, category: MagicCategory.Wind },
     { name: '落石', factor: 4, mp: 45, category: MagicCategory.Earth },
-    { name: '爆裂術', factor: 12, mp: 100, category: MagicCategory.Fire }, // 8
+    { name: '爆裂術', factor: 12, mp: 100, category: MagicCategory.Fire, fx: ExplosionFx }, // 8
     { name: '絕對零度', factor: 12, mp: 100, category: MagicCategory.Ice },
     { name: '龍捲風', factor: 12, mp: 100, category: MagicCategory.Wind },
     { name: '隕石', factor: 12, mp: 100, category: MagicCategory.Earth },

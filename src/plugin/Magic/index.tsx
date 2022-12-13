@@ -23,6 +23,7 @@ import { CharacterInfoRendererData } from '../../screenComp/CharacterInfoPanel';
 import { getCategoryFactor, getCategoryText, getRandomCategory, MagicCategory, MagicList } from './data';
 import { createMagicFx, FXRenderData } from './fx';
 import { ExplosionFx } from './fx/explosion';
+import { createSpellFx, SpellFx } from './fx/spell';
 
 const PluginDataKey = 'plugin_magic';
 const MagicActionKey = 'magic';
@@ -115,8 +116,8 @@ export const Maigc = createPlugin((process) => {
                             },
                         },
                     }));
-                    await waitFor(500);
-                    taskState.add(createMagicFx(fxElem, ExplosionFx));
+                    await createMagicFx(fxElem, createSpellFx(magicData.category));
+                    if (magicData.fx) taskState.add(createMagicFx(fxElem, magicData.fx));
                 }
                 return action;
             }),

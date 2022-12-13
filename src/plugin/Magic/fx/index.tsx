@@ -14,6 +14,16 @@ export const getMonsterPos = (w: number, h: number): React.CSSProperties => {
     };
 };
 
+export const gerFullScreenPos = (): React.CSSProperties => {
+    return {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        left: 0,
+        top: 0,
+    };
+};
+
 export const getHorizontalSpriteCSS = (w: number, h: number, frame: number): React.CSSProperties => {
     return {
         position: 'absolute',
