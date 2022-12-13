@@ -28,6 +28,7 @@ export const Battle: React.FC = () => {
 
 const BattleContent: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
     const classes = useStyles();
+    const { process } = useAppContext();
     const [action, setAction] = React.useState<BattleMenuAction>({ action: BattleActionKey.Attack });
     const animeRef = React.useRef<AnimeInstance>();
     React.useEffect(() => {
@@ -49,6 +50,11 @@ const BattleContent: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
                 action={action}
                 onChange={(action) => (action.action == BattleActionKey.Escape ? battle.escape() : setAction(action))}
             />
+            {PipeLine.create(Hooks['App.Battle.renderBattleScreen'](process.getHookMap))
+                .add((renderData) =>
+                    renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer({ battle })}</React.Fragment>)
+                )
+                .run({ renderers: [] }, battle)}
         </Anime>
     );
 
@@ -121,15 +127,10 @@ const BattleActionMenu: React.FC<I_Props_BattleActionMenuRenderer & { battle: Ba
                 <BattleActionMenuButton {...props} title="逃跑" selectValue={{ action: BattleActionKey.Escape }} />,
             </div>
             {PipeLine.create(Hooks['App.Battle.renderActionMenuContent'](process.getHookMap))
-                .run(
-                    {
-                        renderers: [],
-                    },
-                    props.battle
+                .add((renderData) =>
+                    renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer(props)}</React.Fragment>)
                 )
-                .renderers.map((renderer, index) => (
-                    <React.Fragment key={index}>{renderer(props)}</React.Fragment>
-                ))}
+                .run({ renderers: [] }, props.battle)}
         </div>
     ) : null;
 };
@@ -161,6 +162,7 @@ const useStyles = createUseStyles({
         '-webkit-filter': 'sepia(.5) grayscale(.5) brightness(.5)',
     },
     charInfo: {
+        zIndex: 500,
         '&.monster': {
             left: 'auto',
             right: '1rem',
@@ -168,6 +170,7 @@ const useStyles = createUseStyles({
     },
     monster: {
         position: 'absolute',
+        zIndex: 100,
         left: '50%',
         top: '50%',
         marginLeft: -175,
@@ -187,6 +190,7 @@ const useStyles = createUseStyles({
     },
     logger: {
         position: 'absolute',
+        zIndex: 500,
         left: '1rem',
         bottom: '1rem',
         padding: '.5rem',
@@ -212,6 +216,7 @@ const useStyles = createUseStyles({
     },
     actionMenu: {
         position: 'absolute',
+        zIndex: 500,
         right: '1rem',
         bottom: '1rem',
         padding: '.5rem',

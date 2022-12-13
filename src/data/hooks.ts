@@ -1,5 +1,5 @@
 import { Battle } from '../battle';
-import { BattleActionMenuRenderData, I_BattleAction, I_BattleResult } from '../def/battle';
+import { BattleActionMenuRenderData, BattleScreenRenderData, I_BattleAction, I_BattleResult } from '../def/battle';
 import { I_Character, I_MainContext } from '../def/mianContext';
 import { AsyncTaskState } from '../lib/asyncTaskState';
 import { createAsyncHook, createHook } from '../lib/hook';
@@ -20,6 +20,7 @@ export const Hooks = {
     'App.Battle.damage': createAsyncHook<I_BattleResult, [I_BattleAction, Battle, AsyncTaskState]>('App.Battle.damage'),
     'App.Battle.afterAction': createAsyncHook<I_BattleAction, [Battle, AsyncTaskState]>('App.Battle.afterAction'),
     'App.Battle.renderMainAction': createHook<BattleActionMenuRenderData, [Battle]>('App.Battle.renderMainAction'),
+    'App.Battle.renderBattleScreen': createHook<BattleScreenRenderData, [Battle]>('App.Battle.renderBattleScreen'),
     'App.Battle.renderActionMenuContent': createHook<BattleActionMenuRenderData, [Battle]>('App.Battle.renderActionMenuContent'),
     'App.Battle.validateAction': createHook<I_BattleAction, [Battle]>('App.Battle.validateAction'),
 };

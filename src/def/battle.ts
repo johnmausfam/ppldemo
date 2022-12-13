@@ -1,3 +1,4 @@
+import { Battle } from '../battle';
 import { I_Character } from './mianContext';
 
 export interface I_BattleLog {
@@ -19,6 +20,12 @@ export interface I_BattleAction {
 export interface I_BattleResult {
     damage?: number;
 }
+
+export interface I_Props_BattleScreenRenderer {
+    battle:Battle
+}
+export type BattleScreenRenderer = (props: I_Props_BattleScreenRenderer) => React.ReactNode;
+export type BattleScreenRenderData = { renderers: BattleScreenRenderer[] };
 
 export interface I_Props_BattleActionMenuRenderer {
     action: BattleMenuAction;
