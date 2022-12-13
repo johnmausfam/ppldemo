@@ -1,18 +1,18 @@
+import { AnimeInstance } from 'animejs';
 import classNames from 'classnames';
 import * as React from 'react';
 import { createUseStyles } from 'react-jss';
 import { Battle as BattleCtrl } from '../../battle';
 import { Hooks } from '../../data/hooks';
 import { BattleActionKey, BattleMenuAction, I_Props_BattleActionMenuRenderer } from '../../def/battle';
-import { getShakeAnimeProps } from '../../lib/anime/script';
+import Anime from '../../lib/anime';
+import { getHideProps, getShakeAnimeProps } from '../../lib/anime/script';
 import { useObservable } from '../../lib/observable';
 import { PipeLine } from '../../lib/pipeline';
 import { useAppContext, useMainContext } from '../../lib/reactHook';
 import { depthCopy } from '../../lib/util';
 import { CharacterInfo } from '../../screenComp/CharacterInfo';
 import { ScreenContainer } from '../Layout';
-import Anime from '../../lib/anime';
-import { AnimeInstance } from 'animejs';
 
 export const Battle: React.FC = () => {
     const { battle } = useMainContext();
@@ -51,8 +51,11 @@ const BattleContent: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
                 onChange={(action) => (action.action == BattleActionKey.Escape ? battle.escape() : setAction(action))}
             />
             {PipeLine.create(Hooks['App.Battle.renderBattleScreen'](process.getHookMap))
-                .add((renderData) =>
-                    renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer({ battle })}</React.Fragment>)
+                .add(
+                    (renderData) => (
+                        console.log('### App.Battle.renderBattleScreen', renderData),
+                        renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer({ battle })}</React.Fragment>)
+                    )
                 )
                 .run({ renderers: [] }, battle)}
         </Anime>
@@ -71,6 +74,7 @@ const Monster: React.FC<{ battle: BattleCtrl; onClick?: () => void }> = ({ battl
     const classes = useStyles();
     const enable = useObservable(battle.userWaiting);
     const animeRef = React.useRef<AnimeInstance>();
+    const animeRef_hide = React.useRef<AnimeInstance>();
     React.useEffect(() => {
         const ob = () => {
             animeRef.current?.restart();
@@ -78,9 +82,20 @@ const Monster: React.FC<{ battle: BattleCtrl; onClick?: () => void }> = ({ battl
         battle.getAnimeObservableState('monster').addObserver(ob);
         return () => void battle.getAnimeObservableState('monster').removeObserver(ob);
     }, []);
+    React.useEffect(() => {
+        const ob = () => {
+            animeRef_hide.current?.restart();
+        };
+        battle.getAnimeObservableState('monsterDead').addObserver(ob);
+        return () => void battle.getAnimeObservableState('monsterDead').removeObserver(ob);
+    }, []);
     return (
-        <Anime in appear animeRef={animeRef} {...getShakeAnimeProps()}>
-            <div className={classNames(classes.monster, { enable })} onClick={() => enable && onClick?.()}></div>
+        <Anime in appear animeRef={animeRef_hide} {...getHideProps()}>
+            <div>
+                <Anime in appear animeRef={animeRef} {...getShakeAnimeProps()}>
+                    <div className={classNames(classes.monster, { enable })} onClick={() => enable && onClick?.()}></div>
+                </Anime>
+            </div>
         </Anime>
     );
 };
@@ -111,6 +126,9 @@ const BattleActionMenu: React.FC<I_Props_BattleActionMenuRenderer & { battle: Ba
         <div className={classes.actionMenu}>
             <div className={classes.actionMenuPanel}>
                 {PipeLine.create(Hooks['App.Battle.renderMainAction'](process.getHookMap))
+                    .add((renderData) =>
+                        renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer(props)}</React.Fragment>)
+                    )
                     .run(
                         {
                             renderers: [
@@ -120,10 +138,7 @@ const BattleActionMenu: React.FC<I_Props_BattleActionMenuRenderer & { battle: Ba
                             ],
                         },
                         props.battle
-                    )
-                    .renderers.map((renderer, index) => (
-                        <React.Fragment key={index}>{renderer(props)}</React.Fragment>
-                    ))}
+                    )}
                 <BattleActionMenuButton {...props} title="逃跑" selectValue={{ action: BattleActionKey.Escape }} />,
             </div>
             {PipeLine.create(Hooks['App.Battle.renderActionMenuContent'](process.getHookMap))

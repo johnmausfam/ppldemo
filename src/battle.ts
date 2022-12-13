@@ -18,6 +18,7 @@ export class Battle {
 
     protected animeState = {
         monster: Observable.create<number>(0),
+        monsterDead: Observable.create<number>(0),
         player: Observable.create<number>(0),
     };
 
@@ -76,7 +77,10 @@ export class Battle {
             .run(actionData, this, player_task);
 
         await player_task.wait();
-        if (await this.judge()) {
+        const judge1 = await this.judge();
+        if (judge1) {
+            judge1 == 2 && this.playAnime('monsterDead');
+            await waitFor(2000);
             this.end();
             return;
         }
@@ -91,7 +95,10 @@ export class Battle {
             .run(this.createBattleAction('monster', 'player', 'attack', null), this, monster_task);
 
         await Promise.all([monster_task.wait(), waitFor(500)]);
-        if (await this.judge()) {
+        const judge2 = await this.judge();
+        if (judge2) {
+            judge2 == 2 && this.playAnime('monsterDead');
+            await waitFor(2000);
             this.end();
         } else {
             this.nextTurn();
@@ -129,13 +136,13 @@ export class Battle {
         if (this.player.getState().hp <= 0) {
             this.log(`${this.player.getState().name}已經死了,您戰敗了,戰鬥結束!`);
             await waitFor(1000);
-            return true;
+            return 1;
         } else if (this.monster.getState().hp <= 0) {
             this.log(`${this.monster.getState().name}已經死了,您勝利了,戰鬥結束!`);
             await waitFor(1000);
-            return true;
+            return 2;
         }
-        return false;
+        return 0;
     }
 
     async waitUntilBattleEnd() {

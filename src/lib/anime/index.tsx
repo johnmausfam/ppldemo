@@ -3,13 +3,14 @@ import { Transition, TransitionGroup } from 'react-transition-group';
 import { TransitionStatus, TransitionProps } from 'react-transition-group/Transition';
 import anime, { AnimeParams, AnimeInstance } from 'animejs';
 
-export type AnimeProps = AnimeParams & {
+export type AnimeProps = Omit<AnimeParams, 'duration'> & {
     onEntering?: AnimeParams;
     onEntered?: AnimeParams;
     onExited?: AnimeParams;
     onExiting?: AnimeParams;
     initProps?: AnimeProps;
     animeRef?: React.MutableRefObject<AnimeInstance | undefined>;
+    duration: number;
 };
 
 export const AnimeComp: FC<
@@ -105,7 +106,7 @@ const Anime: FC<AnimeTransitionProps> = ({
     return (
         <Transition mountOnEnter={mountOnEnter} unmountOnExit={unmountOnExit} appear={appear} timeout={duration} in={inProp}>
             {(status: TransitionStatus) => (
-                <AnimeComp duration={duration} status={status} initProps={initProps} {...(props as AnimeProps)}>
+                <AnimeComp duration={duration} status={status} initProps={initProps} {...props}>
                     {children}
                 </AnimeComp>
             )}

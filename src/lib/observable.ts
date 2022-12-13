@@ -3,9 +3,10 @@ import { AsyncHook, HookMap } from './hook';
 import { Operation } from './pipeline';
 
 type ObservableDataType = string | number | {};
-type ObservableStateUpdater<T extends ObservableDataType> = (prevState: Readonly<T>) => T;
-export type Observer<T extends ObservableDataType> = (state: Readonly<T>) => void;
-export class Observable<T extends ObservableDataType> {
+type ObservableDataTypeWithEmpty = ObservableDataType | undefined | null;
+type ObservableStateUpdater<T extends ObservableDataTypeWithEmpty> = (prevState: Readonly<T>) => T;
+export type Observer<T extends ObservableDataTypeWithEmpty> = (state: Readonly<T>) => void;
+export class Observable<T extends ObservableDataTypeWithEmpty> {
     protected state: Readonly<T>;
     protected observers = new Set<Observer<T>>();
     constructor(initData: T) {
@@ -55,7 +56,7 @@ export class Observable<T extends ObservableDataType> {
         return this;
     }
 
-    static create<T extends ObservableDataType>(initData: T) {
+    static create<T extends ObservableDataTypeWithEmpty>(initData: T) {
         return new Observable<T>(initData);
     }
 
@@ -73,7 +74,7 @@ export class Observable<T extends ObservableDataType> {
     }
 }
 
-export const useObservable = <T extends ObservableDataType>(ob: Observable<T>) => {
+export const useObservable = <T extends ObservableDataTypeWithEmpty>(ob: Observable<T>) => {
     return useSyncExternalStore(
         useCallback(
             (onStoreChange: () => void) => {

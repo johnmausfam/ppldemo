@@ -3,15 +3,26 @@ import React from 'react';
 import { createUseStyles } from 'react-jss';
 import { Battle } from '../../battle';
 import { MainContext } from '../../data/mainContext';
-import { BattleActionMenuRenderData, I_BattleAction, I_BattleResult, I_Props_BattleActionMenuRenderer } from '../../def/battle';
+import {
+    BattleActionMenuRenderData,
+    BattleScreenRenderData,
+    I_BattleAction,
+    I_BattleResult,
+    I_Props_BattleActionMenuRenderer,
+    I_Props_BattleScreenRenderer,
+} from '../../def/battle';
 import { I_Character, I_MainContext } from '../../def/mianContext';
 import { createPlugin } from '../../def/plugin';
+import { AsyncTaskState } from '../../lib/asyncTaskState';
 import { createHookAsyncRunner, createHookRunner } from '../../lib/hook';
+import { Observable, useObservable } from '../../lib/observable';
 import { useScreenComp } from '../../lib/reactHook';
 import { getRandom, waitFor } from '../../lib/util';
 import { BattleActionMenuButton } from '../../screen/Battle';
 import { CharacterInfoRendererData } from '../../screenComp/CharacterInfoPanel';
 import { getCategoryFactor, getCategoryText, getRandomCategory, MagicCategory, MagicList } from './data';
+import { createMagicFx, FXRenderData } from './fx';
+import { ExplosionFx } from './fx/explosion';
 
 const PluginDataKey = 'plugin_magic';
 const MagicActionKey = 'magic';
@@ -21,7 +32,13 @@ interface I_PluginData_Magic {
     matk: number;
     category: MagicCategory;
 }
+
 export const Maigc = createPlugin((process) => {
+    const fxElem = Observable.create<null | FXRenderData>(null);
+    const FXRender: React.FC = () => {
+        return useObservable(fxElem)?.renderer() ?? null;
+    };
+
     return {
         hooks: {
             'MainContext.asyncLoading': createHookAsyncRunner<I_MainContext>(async (context) => {
@@ -83,10 +100,11 @@ export const Maigc = createPlugin((process) => {
                 }
                 return action;
             }),
-            'App.Battle.beforeAction': createHookAsyncRunner<I_BattleAction, [Battle]>(async (action, battle) => {
+            'App.Battle.beforeAction': createHookAsyncRunner<I_BattleAction, [Battle, AsyncTaskState]>(async (action, battle, taskState) => {
                 if (action.action == MagicActionKey) {
                     const magicData = MagicList[action.args];
                     battle.log(`${action.source.name}施展了魔法「${magicData.name}」!`);
+                    //consume MP
                     battle[action.sourceKey].update((character) => ({
                         ...character,
                         pluginData: {
@@ -98,11 +116,11 @@ export const Maigc = createPlugin((process) => {
                         },
                     }));
                     await waitFor(500);
+                    taskState.add(createMagicFx(fxElem, ExplosionFx));
                 }
                 return action;
             }),
             'App.Battle.damage': createHookAsyncRunner<I_BattleResult, [I_BattleAction, Battle]>(async (result, action, battle) => {
-                console.log('### App.Battle.damage', result, action, battle);
                 if (action.action == MagicActionKey) {
                     const sourcePluginData = action.source.pluginData[PluginDataKey] as I_PluginData_Magic;
                     const targetPluginData = action.target.pluginData[PluginDataKey] as I_PluginData_Magic;
@@ -115,6 +133,12 @@ export const Maigc = createPlugin((process) => {
                     );
                 }
                 return result;
+            }),
+            'App.Battle.renderBattleScreen': createHookRunner<BattleScreenRenderData, [Battle]>((renderData, battle) => {
+                renderData.renderers.push((props: I_Props_BattleScreenRenderer) => {
+                    return <FXRender />;
+                });
+                return renderData;
             }),
         },
     };

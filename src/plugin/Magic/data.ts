@@ -22,7 +22,7 @@ export const MagicList: I_Magic[] = [
     { name: '冰錐', factor: 4, mp: 45, category: MagicCategory.Ice },
     { name: '雙重風刃', factor: 4, mp: 45, category: MagicCategory.Wind },
     { name: '落石', factor: 4, mp: 45, category: MagicCategory.Earth },
-    { name: '爆裂術', factor: 12, mp: 100, category: MagicCategory.Fire },
+    { name: '爆裂術', factor: 12, mp: 100, category: MagicCategory.Fire }, // 8
     { name: '絕對零度', factor: 12, mp: 100, category: MagicCategory.Ice },
     { name: '龍捲風', factor: 12, mp: 100, category: MagicCategory.Wind },
     { name: '隕石', factor: 12, mp: 100, category: MagicCategory.Earth },
