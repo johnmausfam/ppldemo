@@ -1,3 +1,4 @@
+import { AudioMap } from './data/audio';
 import { Hooks } from './data/hooks';
 import { I_BattleAction, I_BattleLog } from './def/battle';
 import { I_Character } from './def/mianContext';
@@ -79,7 +80,10 @@ export class Battle {
         await player_task.wait();
         const judge1 = await this.judge();
         if (judge1) {
-            judge1 == 2 && this.playAnime('monsterDead');
+            if (judge1 == 2) {
+                this.playAnime('monsterDead');
+                AudioMap.dead.play();
+            }
             await waitFor(2000);
             this.end();
             return;
@@ -97,7 +101,10 @@ export class Battle {
         await Promise.all([monster_task.wait(), waitFor(500)]);
         const judge2 = await this.judge();
         if (judge2) {
-            judge2 == 2 && this.playAnime('monsterDead');
+            if (judge2 == 2) {
+                this.playAnime('monsterDead');
+                AudioMap.dead.play();
+            }
             await waitFor(2000);
             this.end();
         } else {
@@ -108,8 +115,10 @@ export class Battle {
     async damage(action: I_BattleAction, asynTaskState: AsyncTaskState): Promise<I_BattleAction> {
         const countDamageHook = Hooks['App.Battle.damage'](this.main.getHookMap);
         let battleResult = await countDamageHook({ damage: undefined }, action, this, asynTaskState);
+
         if (battleResult.damage === undefined) {
             //default behavior
+            asynTaskState.add(AudioMap.damage.play());
             battleResult.damage = Math.round(
                 (Math.max(3, action.source.atk - action.target.def) +
                     action.source.atk *

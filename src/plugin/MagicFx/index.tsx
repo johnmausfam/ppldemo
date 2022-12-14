@@ -6,6 +6,7 @@ import { AsyncTaskState } from '../../lib/asyncTaskState';
 import { createHookAsyncRunner, createHookRunner } from '../../lib/hook';
 import { Observable, useObservable } from '../../lib/observable';
 import { I_Magic } from '../Magic/data';
+import { MagicFXAudioMap } from './audio';
 import { createMagicFx, FXRenderData, MagicFXMap } from './data';
 import { createSpellFx } from './fx/spell';
 
@@ -16,7 +17,7 @@ export const MagicFX = createPlugin((process) => {
         hooks: {
             'MagicPlugin.spellMagic': createHookAsyncRunner<I_BattleAction, [I_Magic, Battle, AsyncTaskState]>(
                 async (action, magicData, battleCtrl, taskState) => {
-                    console.log('### MagicFX spellMagic', action, magicData);
+                    MagicFXAudioMap.spell.play();
                     await createMagicFx(fxRenderData, createSpellFx(magicData.category));
                     const fxDef = MagicFXMap[magicData.id];
                     if (fxDef) taskState.add(createMagicFx(fxRenderData, fxDef.fxComp));

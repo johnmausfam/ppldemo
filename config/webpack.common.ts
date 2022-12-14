@@ -17,7 +17,7 @@ const config: webpack.Configuration = {
                     loader: 'babel-loader',
                 },
             },
-            { test: /\.(?:ico|gif|png|jpg|jpeg|webp|jfif)$/i, type: 'asset/resource' },
+            { test: /\.(?:ico|gif|png|jpg|jpeg|webp|jfif|wav|mp3)$/i, type: 'asset/resource' },
         ],
     },
 };
