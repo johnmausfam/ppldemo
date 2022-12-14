@@ -3,27 +3,16 @@ import React from 'react';
 import { createUseStyles } from 'react-jss';
 import { Battle } from '../../battle';
 import { MainContext } from '../../data/mainContext';
-import {
-    BattleActionMenuRenderData,
-    BattleScreenRenderData,
-    I_BattleAction,
-    I_BattleResult,
-    I_Props_BattleActionMenuRenderer,
-    I_Props_BattleScreenRenderer,
-} from '../../def/battle';
+import { BattleActionMenuRenderData, I_BattleAction, I_BattleResult, I_Props_BattleActionMenuRenderer } from '../../def/battle';
 import { I_Character, I_MainContext } from '../../def/mianContext';
 import { createPlugin } from '../../def/plugin';
 import { AsyncTaskState } from '../../lib/asyncTaskState';
 import { createHookAsyncRunner, createHookRunner } from '../../lib/hook';
-import { Observable, useObservable } from '../../lib/observable';
 import { useScreenComp } from '../../lib/reactHook';
-import { getRandom, waitFor } from '../../lib/util';
+import { getRandom } from '../../lib/util';
 import { BattleActionMenuButton } from '../../screen/Battle';
 import { CharacterInfoRendererData } from '../../screenComp/CharacterInfoPanel';
-import { getCategoryFactor, getCategoryText, getRandomCategory, MagicCategory, MagicList } from './data';
-import { createMagicFx, FXRenderData } from './fx';
-import { ExplosionFx } from './fx/explosion';
-import { createSpellFx, SpellFx } from './fx/spell';
+import { DefaultMagicList, getCategoryFactor, getCategoryText, getRandomCategory, I_Magic, MagicCategory, MagicPluginHook } from './data';
 
 const PluginDataKey = 'plugin_magic';
 const MagicActionKey = 'magic';
@@ -35,15 +24,12 @@ interface I_PluginData_Magic {
 }
 
 export const Maigc = createPlugin((process) => {
-    const fxElem = Observable.create<null | FXRenderData>(null);
-    const FXRender: React.FC = () => {
-        return useObservable(fxElem)?.renderer() ?? null;
-    };
-
+    let magicList: I_Magic[] = DefaultMagicList;
     return {
         hooks: {
             'MainContext.asyncLoading': createHookAsyncRunner<I_MainContext>(async (context) => {
                 process.context.update(MainContext.screen.Loading.setMessage(`loading Magic plugin...`));
+                magicList = MagicPluginHook['MagicPlugin.loadMagicList'](process.getHookMap)({ magicList: magicList }).magicList;
                 return context;
             }),
             'MainContext.initPlayerCharacter': createHookRunner<I_MainContext>((context) => {
@@ -82,19 +68,24 @@ export const Maigc = createPlugin((process) => {
                     ...renderData,
                     renderers: [
                         ...renderData.renderers,
-                        (props) =>
-                            props.action.action == MagicActionKey && (
-                                <MagicMenu {...props} mp={battle.player.getState().pluginData[PluginDataKey].mp} />
-                            ),
+                        (props) => {
+                            return (
+                                props.action.action == MagicActionKey && (
+                                    <MagicMenu {...props} mp={battle.player.getState().pluginData[PluginDataKey].mp} magicList={magicList} />
+                                )
+                            );
+                        },
                     ],
                 };
             }),
             'App.Battle.validateAction': createHookRunner<I_BattleAction, [Battle]>((action, battle) => {
                 if (action.action == MagicActionKey) {
                     const sourcePluginData = action.source.pluginData[PluginDataKey] as I_PluginData_Magic;
-                    const magicData = MagicList[action.args];
-
-                    if (sourcePluginData.mp < magicData.mp) {
+                    const magicData = getMagicItem(magicList, action.args);
+                    if (!magicData) {
+                        battle.log(`無效的魔法指令(action.args)!`);
+                        action.invalid = true;
+                    } else if (sourcePluginData.mp < magicData.mp) {
                         battle.log(`MP不足以施展「${magicData.name}」!`);
                         action.invalid = true;
                     }
@@ -103,21 +94,22 @@ export const Maigc = createPlugin((process) => {
             }),
             'App.Battle.beforeAction': createHookAsyncRunner<I_BattleAction, [Battle, AsyncTaskState]>(async (action, battle, taskState) => {
                 if (action.action == MagicActionKey) {
-                    const magicData = MagicList[action.args];
-                    battle.log(`${action.source.name}施展了魔法「${magicData.name}」!`);
-                    //consume MP
-                    battle[action.sourceKey].update((character) => ({
-                        ...character,
-                        pluginData: {
-                            ...character.pluginData,
-                            [PluginDataKey]: {
-                                ...character.pluginData[PluginDataKey],
-                                mp: character.pluginData[PluginDataKey].mp - magicData.mp,
+                    const magicData = getMagicItem(magicList, action.args);
+                    if (magicData) {
+                        battle.log(`${action.source.name}施展了魔法「${magicData.name}」!`);
+                        //consume MP
+                        battle[action.sourceKey].update((character) => ({
+                            ...character,
+                            pluginData: {
+                                ...character.pluginData,
+                                [PluginDataKey]: {
+                                    ...character.pluginData[PluginDataKey],
+                                    mp: character.pluginData[PluginDataKey].mp - magicData.mp,
+                                },
                             },
-                        },
-                    }));
-                    await createMagicFx(fxElem, createSpellFx(magicData.category));
-                    if (magicData.fx) taskState.add(createMagicFx(fxElem, magicData.fx));
+                        }));
+                        await MagicPluginHook['MagicPlugin.spellMagic'](process.getHookMap)(action, magicData, battle, taskState);
+                    }
                 }
                 return action;
             }),
@@ -125,25 +117,23 @@ export const Maigc = createPlugin((process) => {
                 if (action.action == MagicActionKey) {
                     const sourcePluginData = action.source.pluginData[PluginDataKey] as I_PluginData_Magic;
                     const targetPluginData = action.target.pluginData[PluginDataKey] as I_PluginData_Magic;
-                    const magicData = MagicList[action.args];
-                    result.damage = Math.round(
-                        (sourcePluginData.matk * getCategoryFactor(magicData.category, targetPluginData.category) + 20) *
-                            getCategoryFactor(sourcePluginData.category, targetPluginData.category) *
-                            magicData.factor *
-                            getRandom(0.85, 1.25)
-                    );
+                    const magicData = getMagicItem(magicList, action.args);
+                    if (magicData) {
+                        result.damage = Math.round(
+                            (sourcePluginData.matk * getCategoryFactor(magicData.category, targetPluginData.category) + 20) *
+                                getCategoryFactor(sourcePluginData.category, targetPluginData.category) *
+                                magicData.factor *
+                                getRandom(0.85, 1.25)
+                        );
+                    }
                 }
                 return result;
-            }),
-            'App.Battle.renderBattleScreen': createHookRunner<BattleScreenRenderData, [Battle]>((renderData, battle) => {
-                renderData.renderers.push((props: I_Props_BattleScreenRenderer) => {
-                    return <FXRender />;
-                });
-                return renderData;
             }),
         },
     };
 });
+
+const getMagicItem = (magicList: I_Magic[], magicID: string) => magicList.find((magicItem) => magicItem.id == magicID);
 
 const ExtendedPlayerInfo: React.FC<{ character: I_Character }> = ({ character }) => {
     const classes = useStyles();
@@ -157,18 +147,18 @@ const ExtendedPlayerInfo: React.FC<{ character: I_Character }> = ({ character })
     );
 };
 
-const MagicMenu: React.FC<I_Props_BattleActionMenuRenderer & { mp: number }> = ({ action, mp, onChange }) => {
+const MagicMenu: React.FC<I_Props_BattleActionMenuRenderer & { mp: number; magicList: I_Magic[] }> = ({ action, mp, magicList, onChange }) => {
     const classes = useStyles();
     return (
         <div className={classes.magicMenu}>
             <div className={classes.magicMenuWrapper}>
-                {MagicList.map((magicItem, index) => {
+                {magicList.map((magicItem) => {
                     const disabled = mp < magicItem.mp;
                     return (
                         <div
-                            key={index}
-                            className={classNames('item', { selected: !disabled && action.args == index, disabled })}
-                            onClick={() => action.args != index && onChange?.({ action: MagicActionKey, args: index })}
+                            key={magicItem.id}
+                            className={classNames('item', { selected: !disabled && action.args == magicItem.id, disabled })}
+                            onClick={() => action.args != magicItem.id && onChange?.({ action: MagicActionKey, args: magicItem.id })}
                         >
                             {magicItem.name}({magicItem.mp})
                         </div>

@@ -60,6 +60,7 @@ export const AnimeComp: FC<
         if (initProps) {
             anime.set(childRef.current, initProps);
         }
+
         const animeInstance = anime(animeOptions);
         if (animeRef) {
             animeRef.current = animeInstance;

@@ -35,8 +35,8 @@ const hookMap = [
         asyncHook2: createHookAsyncRunner<{ str: string }>(async (input) => ({ str: '' + input.str, a: 1 })),
     },
 ];
-const asyncHook1 = createAsyncHook<string>('asyncHook1')(hookMap);
-const asyncHook2 = createAsyncHook<{ str: string }>('asyncHook2')(hookMap);
+const asyncHook1 = createAsyncHook<string>('asyncHook1')(() => hookMap);
+const asyncHook2 = createAsyncHook<{ str: string }>('asyncHook2')(() => hookMap);
 AsyncPipeLine.create(asyncOper1)
     .add(asyncOper2)
     .add(asyncHook1)
@@ -48,7 +48,7 @@ AsyncPipeLine.create(asyncOper1)
     });
 
 // Hook (sync) example
-const hook1 = createHook<string>('hook1')(hookMap);
-const hook2 = createHook<{ str: string }>('hook2')(hookMap);
+const hook1 = createHook<string>('hook1')(() => hookMap);
+const hook2 = createHook<{ str: string }>('hook2')(() => hookMap);
 const hookPipelineOutput = PipeLine.create(oper1).add(oper2).add(hook1).add(oper3).add(hook2).run(1);
 console.log('### hookPipelineOutput', hookPipelineOutput);

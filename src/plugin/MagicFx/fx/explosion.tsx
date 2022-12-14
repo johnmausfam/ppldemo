@@ -1,7 +1,23 @@
 import { AnimeInstance } from 'animejs';
 import React from 'react';
-import { getMonsterPos, I_Props_MagicFX } from '.';
 import Anime, { AnimeProps } from '../../../lib/anime';
+import { I_Props_MagicFX } from '../data';
+import { getMonsterPos } from '../pos';
+
+export const ExplosionFX: React.FC<I_Props_MagicFX> = ({ finishPromise }) => {
+    const animeRef = React.useRef<AnimeInstance>();
+    React.useEffect(() => {
+        animeRef.current?.play();
+        animeRef.current?.finished.then(() => {
+            finishPromise?.();
+        });
+    }, []);
+    return (
+        <Anime in appear animeRef={animeRef} {...getExplosionFx()}>
+            <div style={fxNodeStyle} />
+        </Anime>
+    );
+};
 
 export const getExplosionFx = (): AnimeProps => {
     return {
@@ -12,22 +28,7 @@ export const getExplosionFx = (): AnimeProps => {
     };
 };
 
-export const ExplosionFx: React.FC<I_Props_MagicFX> = ({ finishPromise }) => {
-    const animeRef = React.useRef<AnimeInstance>();
-    React.useEffect(() => {
-        animeRef.current?.play();
-        animeRef.current?.finished.then(() => {
-            finishPromise?.();
-        });
-    }, []);
-    return (
-        <Anime in appear animeRef={animeRef} {...getExplosionFx()}>
-            <div style={spriteStyle} />
-        </Anime>
-    );
-};
-
-const spriteStyle = {
+const fxNodeStyle = {
     ...getMonsterPos(192, 192),
     zIndex: 600,
     backgroundImage: `url(${require('../assets/explosion.png')})`,

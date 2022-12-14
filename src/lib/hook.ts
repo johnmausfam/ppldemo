@@ -17,11 +17,9 @@ export const createHook =
             .map((hookMap) => hookMap[hookName]) as HookRunner<T, A>[];
         return (input: T, ...args: A) => {
             let output: T = { ...input };
-            console.log('$$$ createHook', input, output);
             for (let runner of hookRunners) {
                 output = runner(output, ...args);
             }
-            console.log('$$$ createHook', input, output);
             return output;
         };
     };

@@ -12,11 +12,9 @@ export const CharacterInfoPanel: React.FC<I_Props_CharacterInfoPanel> = ({ class
             <div className={classes.wrapper}>
                 <NameCaption characterData={characterData} />
                 <ValueBar title="HP" value={characterData.hp} maxValue={characterData.maxhp} />
-                {children?.renderers.map(
-                    (renderer, index) => (
-                        console.log('### children?.renderers:', index), (<React.Fragment key={index}>{renderer()}</React.Fragment>)
-                    )
-                )}
+                {children?.renderers.map((renderer, index) => (
+                    <React.Fragment key={index}>{renderer()}</React.Fragment>
+                ))}
             </div>
         </div>
     );

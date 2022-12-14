@@ -27,7 +27,6 @@ export class Observable<T extends ObservableDataTypeWithEmpty> {
     }
 
     protected notify() {
-        console.log('### notify()', this.state);
         this.observers.forEach((ob) => ob(this.state));
     }
 

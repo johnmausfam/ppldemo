@@ -51,11 +51,8 @@ const BattleContent: React.FC<{ battle: BattleCtrl }> = ({ battle }) => {
                 onChange={(action) => (action.action == BattleActionKey.Escape ? battle.escape() : setAction(action))}
             />
             {PipeLine.create(Hooks['App.Battle.renderBattleScreen'](process.getHookMap))
-                .add(
-                    (renderData) => (
-                        console.log('### App.Battle.renderBattleScreen', renderData),
-                        renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer({ battle })}</React.Fragment>)
-                    )
+                .add((renderData) =>
+                    renderData.renderers.map((renderer, index) => <React.Fragment key={index}>{renderer({ battle })}</React.Fragment>)
                 )
                 .run({ renderers: [] }, battle)}
         </Anime>

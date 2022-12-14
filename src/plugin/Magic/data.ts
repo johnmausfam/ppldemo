@@ -1,7 +1,14 @@
-import React from 'react';
+import { Battle } from '../../battle';
+import { I_BattleAction } from '../../def/battle';
+import { AsyncTaskState } from '../../lib/asyncTaskState';
+import { createAsyncHook, createHook } from '../../lib/hook';
 import { getRandom } from '../../lib/util';
-import { I_Props_MagicFX } from './fx';
-import { ExplosionFx } from './fx/explosion';
+
+export type LoadMagicListData = { magicList: I_Magic[] };
+export const MagicPluginHook = {
+    'MagicPlugin.loadMagicList': createHook<LoadMagicListData>('MagicPlugin.loadMagicList'),
+    'MagicPlugin.spellMagic': createAsyncHook<I_BattleAction, [I_Magic, Battle, AsyncTaskState]>('MagicPlugin.spellMagic'),
+};
 
 export enum MagicCategory {
     Earth = 0,
@@ -16,26 +23,18 @@ export const MagicCategoryColorMap: Record<MagicCategory, string> = {
     [MagicCategory.Wind]: '#c9bf00',
 };
 export interface I_Magic {
+    id: number | string;
     name: string;
     factor: number;
     mp: number;
     category: MagicCategory;
-    fx?: React.ComponentType<I_Props_MagicFX>;
 }
 
-export const MagicList: I_Magic[] = [
-    { name: '火球', factor: 1, mp: 10, category: MagicCategory.Fire },
-    { name: '冰塊', factor: 1, mp: 10, category: MagicCategory.Ice },
-    { name: '風刃', factor: 1, mp: 10, category: MagicCategory.Wind },
-    { name: '岩彈', factor: 1, mp: 10, category: MagicCategory.Earth },
-    { name: '火柱', factor: 4, mp: 45, category: MagicCategory.Fire },
-    { name: '冰錐', factor: 4, mp: 45, category: MagicCategory.Ice },
-    { name: '雙重風刃', factor: 4, mp: 45, category: MagicCategory.Wind },
-    { name: '落石', factor: 4, mp: 45, category: MagicCategory.Earth },
-    { name: '爆裂術', factor: 12, mp: 100, category: MagicCategory.Fire, fx: ExplosionFx }, // 8
-    { name: '絕對零度', factor: 12, mp: 100, category: MagicCategory.Ice },
-    { name: '龍捲風', factor: 12, mp: 100, category: MagicCategory.Wind },
-    { name: '隕石', factor: 12, mp: 100, category: MagicCategory.Earth },
+export const DefaultMagicList: I_Magic[] = [
+    { id: 'fire1', name: '火球', factor: 1, mp: 10, category: MagicCategory.Fire },
+    { id: 'ice1', name: '冰塊', factor: 1, mp: 10, category: MagicCategory.Ice },
+    { id: 'wind1', name: '風刃', factor: 1, mp: 10, category: MagicCategory.Wind },
+    { id: 'earth1', name: '岩彈', factor: 1, mp: 10, category: MagicCategory.Earth },
 ];
 
 export const getRandomCategory = () => {
