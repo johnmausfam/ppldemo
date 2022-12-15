@@ -6,27 +6,29 @@ import { MagicFXAudioMap } from '../audio';
 import { I_Props_MagicFX } from '../data';
 import { getMonsterPos } from '../pos';
 
-export const ExplosionFX: React.FC<I_Props_MagicFX> = ({ finishPromise }) => {
+export const TornadoFX: React.FC<I_Props_MagicFX> = ({ finishPromise }) => {
     const animeRef = React.useRef<AnimeInstance>();
     React.useEffect(() => {
         animeRef.current?.play();
-        animeRef.current?.finished.then(() => {
+        waitFor(2500).then(() => {
+            MagicFXAudioMap.wind3.pause();
             finishPromise?.();
         });
-        waitFor(300).then(() => MagicFXAudioMap.fire3.play());
+        MagicFXAudioMap.wind3.currentTime = 0;
+        MagicFXAudioMap.wind3.play();
     }, []);
     return (
-        <Anime in appear animeRef={animeRef} {...getExplosionFx()}>
+        <Anime in appear animeRef={animeRef} {...getTornadoFx()}>
             <div style={fxNodeStyle} />
         </Anime>
     );
 };
 
-export const getExplosionFx = (): AnimeProps => {
+export const getTornadoFx = (): AnimeProps => {
     return {
-        easing: 'steps(19)',
-        duration: 1500,
-        backgroundPositionX: [192 * 2, -1 * 192 * 17 + 'px'],
+        easing: 'easeInQuart',
+        duration: 1200,
+        translateX: [-400, -550, 500],
         autoplay: false,
     };
 };
@@ -34,7 +36,7 @@ export const getExplosionFx = (): AnimeProps => {
 const fxNodeStyle = {
     ...getMonsterPos(192, 192),
     zIndex: 600,
-    backgroundImage: `url(${require('../assets/explosion.png')})`,
+    backgroundImage: `url(${require('../assets/tornado.gif')})`,
     backgroundRepeat: 'no-repeat',
-    transform: `scale(4)`,
+    transform: `translateX(-700px) scale(1.5)`,
 } as React.CSSProperties;
