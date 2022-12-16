@@ -1,5 +1,5 @@
 import { HookMap } from '../lib/hook';
-import { Main } from '../main';
+import { Main } from '../Main';
 
 export interface I_Plugin {
     (process: Main): I_PluginData;

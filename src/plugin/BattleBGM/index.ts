@@ -11,20 +11,14 @@ export const BattleBGM = createPlugin((process) => {
             'App.Battle.initBattle': createHookRunner<I_MainContext>((context) => {
                 sfx.play();
                 waitFor(500).then(async () => {
-                    bgm.volume = 1;
+                    bgm.volume = 0.025;
                     bgm.currentTime = 0;
                     bgm.play();
                 });
                 return context;
             }),
             'App.Battle.endBattle': createHookRunner<I_MainContext>((context) => {
-                (async () => {
-                    while (bgm.volume > 0) {
-                        bgm.volume -= 0.1;
-                        await waitFor(100);
-                    }
-                    bgm.pause();
-                })();
+                bgm.pause();
                 return context;
             }),
         },

@@ -1,6 +1,6 @@
 import { Battle } from '../battle';
 import { I_Character, I_MainContext } from '../def/mianContext';
-import { Main } from '../main';
+import { Main } from '../Main';
 
 export const MainContext = {
     create(): I_MainContext {

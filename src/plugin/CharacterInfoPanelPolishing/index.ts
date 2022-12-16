@@ -2,7 +2,7 @@ import { MainContext } from '../../data/mainContext';
 import { I_Character, I_MainContext } from '../../def/mianContext';
 import { createPlugin } from '../../def/plugin';
 import { createHookAsyncRunner, createHookRunner } from '../../lib/hook';
-import { Main } from '../../main';
+import { Main } from '../../Main';
 import { I_PluginData_character_CharacterInfoPanelPolishing } from './character';
 import { NameCaption } from './screenComp/NameCaption';
 import { CharacterInfoPanel } from './screenComp/CharacterInfoPanel';

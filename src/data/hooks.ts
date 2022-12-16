@@ -3,7 +3,7 @@ import { BattleActionMenuRenderData, BattleScreenRenderData, I_BattleAction, I_B
 import { I_Character, I_MainContext } from '../def/mianContext';
 import { AsyncTaskState } from '../lib/asyncTaskState';
 import { createAsyncHook, createHook } from '../lib/hook';
-import { Main } from '../main';
+import { Main } from '../Main';
 import { CharacterInfoRendererData } from '../screenComp/CharacterInfoPanel';
 
 export const Hooks = {

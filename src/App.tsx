@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GenerateId } from 'jss';
 import { JssProvider } from 'react-jss';
 import { useMainContext } from './lib/reactHook';
-import { Main } from './main';
+import { Main } from './Main';
 import { ScreenMap } from './screen';
 interface I_Props_App {
     process: Main;

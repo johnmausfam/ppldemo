@@ -2,7 +2,7 @@ import anime, { AnimeInstance } from 'animejs';
 import React from 'react';
 import Anime, { AnimeProps } from '../../../lib/anime';
 import { Observable } from '../../../lib/observable';
-import { getRandom } from '../../../lib/util';
+import { getRandom, waitFor } from '../../../lib/util';
 import { I_Props_MagicFX } from '../data';
 import { getMonsterPos } from '../pos';
 
@@ -13,6 +13,10 @@ export const MeteorFX: React.FC<I_Props_MagicFX> = ({ finishPromise }) => {
     React.useEffect(() => {
         const ob = (count: number) => count == itmeCount.length && finishPromise?.();
         obCount.addObserver(ob);
+
+        new Audio(require('../assets/meteor.mp3')).play();
+        waitFor(350).then(() => new Audio(require('../assets/meteor.mp3')).play());
+        waitFor(700).then(() => new Audio(require('../assets/meteor.mp3')).play());
         return () => void obCount.removeObserver(ob);
     }, []);
     return (

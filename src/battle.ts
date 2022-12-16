@@ -6,7 +6,7 @@ import { AsyncTaskState } from './lib/asyncTaskState';
 import { Observable } from './lib/observable';
 import { actOperation, AsyncPipeLine, waitOperation } from './lib/pipeline';
 import { depthCopy, getRandom, waitFor } from './lib/util';
-import { Main } from './main';
+import { Main } from './Main';
 
 export class Battle {
     protected main: Main;
